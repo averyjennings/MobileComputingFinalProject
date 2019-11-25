@@ -17,10 +17,12 @@ import kotlinx.coroutines.launch
 
 class ComicViewModel : ViewModel() {
 
+
+
     private val api = XKCDApi.create()
     private val repository = ComicPostRepository(api)
 
-    private val comics = MutableLiveData<List<Comic>>()
+    private val comics = MutableLiveData<ArrayList<Comic>>()
 
 
     fun netRefresh() = viewModelScope.launch(
@@ -29,8 +31,25 @@ class ComicViewModel : ViewModel() {
         comics.postValue(repository.getAllComics())
     }
 
+    fun getNextComics(init : Int, len : Int) = viewModelScope.launch(
+        context = viewModelScope.coroutineContext
+                + Dispatchers.IO) {
 
-    fun observeComics() : LiveData<List<Comic>> {
+        //TODO some logic to append the next comics onto the list (make sure it doesn't go past the last comic)
+        var tempList = arrayListOf<Comic>()
+        tempList.addAll(comics.value ?: arrayListOf<Comic>())
+        comics.postValue(repository.getNextComics(tempList, init, len))
+
+
+    }
+    fun getFirstComics() = viewModelScope.launch(
+        context = viewModelScope.coroutineContext
+                + Dispatchers.IO) {
+        comics.postValue(repository.getFirstComics())
+    }
+
+
+    fun observeComics() : LiveData<ArrayList<Comic>> {
         return comics
     }
 

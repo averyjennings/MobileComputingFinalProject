@@ -19,9 +19,7 @@ interface XKCDApi {
 
 
     @GET("/info.0.json")
-    suspend fun fetchCurrentComic(): ComicResponse
-
-    data class ComicResponse(val data: Comic)
+    suspend fun fetchCurrentComic(): Comic
 
     companion object {
         private fun buildGsonConverterFactory(): GsonConverterFactory {

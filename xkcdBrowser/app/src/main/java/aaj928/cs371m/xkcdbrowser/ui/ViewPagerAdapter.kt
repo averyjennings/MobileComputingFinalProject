@@ -1,16 +1,13 @@
 package aaj928.cs371m.xkcdbrowser.ui
 
-import aaj928.cs371m.xkcdbrowser.MainActivity
-import aaj928.cs371m.xkcdbrowser.R
 import aaj928.cs371m.xkcdbrowser.api.Comic
-import android.widget.TextView
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentManager
 import androidx.fragment.app.FragmentStatePagerAdapter
 import androidx.viewpager.widget.PagerAdapter
 
 
-class ComicPagerAdapter(fragmentManager: FragmentManager, private var comics: ArrayList<Comic>, viewModel : ComicViewModel) :
+class ViewPagerAdapter(fragmentManager: FragmentManager, private var comics: ArrayList<Comic>, viewModel : ComicViewModel) :
     FragmentStatePagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 
     private var viewModel = viewModel
@@ -22,11 +19,8 @@ class ComicPagerAdapter(fragmentManager: FragmentManager, private var comics: Ar
             viewModel.getNextComics(position+1,1)
         }
 
-
         return ComicFragment.newInstance(comics[position])
     }
-
-    //TODO implement setPrimaryItem
 
     fun addComic(c : Comic){
         if(!comics.contains(c)){
@@ -40,9 +34,9 @@ class ComicPagerAdapter(fragmentManager: FragmentManager, private var comics: Ar
         return comics.size
     }
 
-   /*override fun getItemPosition(`object`: Any): Int {
-        return super.getItemPosition(`object`)
-        //return PagerAdapter.POSITION_NONE
-    }*/
+    /*override fun getItemPosition(`object`: Any): Int {
+         return super.getItemPosition(`object`)
+         //return PagerAdapter.POSITION_NONE
+     }*/
 
 }

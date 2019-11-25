@@ -2,38 +2,58 @@ package aaj928.cs371m.xkcdbrowser.api
 
 class ComicPostRepository(private val api: XKCDApi) {
 
-    fun unpackComic(response: XKCDApi.ComicResponse): Comic {
-            val comic = Comic(
-                response.data.month,
-                response.data.num,
-                response.data.link,
-                response.data.year,
-                response.data.news,
-                response.data.safeTitle,
-                response.data.transcript,
-                response.data.alt,
-                response.data.imageUrl,
-                response.data.title,
-                response.data.day
-                )
+    //fetch comcics from initial index to initial+length
+    suspend fun getNextComics(tempList : ArrayList<Comic>, init: Int, len : Int): ArrayList<Comic>? {
+        var list = arrayListOf<Comic>()
+        if(len == 0){
+            list.add(api.fetchComic(init.toString()))
+            tempList.addAll(list)
+            return tempList
+        }
 
-        return comic
+        for (i in init..init+len) {
+            if(i == 404){
+                continue
+            }
+            list.add(api.fetchComic(i.toString()))
+        }
+        tempList.addAll(list)
+        return tempList
     }
 
-    suspend fun getAllComics(): List<Comic>? {
-        var list = mutableListOf<Comic>()
-        //TODO for now this only fetches 10 comics
-        for (i in 1..10) {
-            list.add(api.fetchComic(i.toString()))//unpackComic(api.fetchComic(i.toString())))
+    suspend fun getFirstComics(/*initial : Int*/): ArrayList<Comic>? {
+        var list = arrayListOf<Comic>()
+
+        //var lastComic = api.fetchCurrentComic()
+        val last = 10//lastComic.num!!
+
+        for (i in 1..last) {
+            list.add(api.fetchComic(i.toString()))
+        }
+
+        return list
+    }
+
+    suspend fun getAllComics(/*initial : Int*/): ArrayList<Comic>? {
+        var list = arrayListOf<Comic>()
+
+        var lastComic = api.fetchCurrentComic()
+        val last = lastComic.num!!
+
+        for (i in 1..403) {
+            list.add(api.fetchComic(i.toString()))
+        }
+        for(i in 405..last){
+            list.add(api.fetchComic(i.toString()))
         }
         return list
     }
 
-   /* suspend fun getComic(num : String): Comic {
+    suspend fun getComic(num : String): Comic {
         if(num.length==0) {
-            return unpackComic(api.fetchCurrentComic())
+            return api.fetchCurrentComic()
         }else{
-            return unpackComic(api.fetchComic("num"))
+            return api.fetchComic("num")
         }
-    }*/
+    }
 }

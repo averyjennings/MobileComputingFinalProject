@@ -1,5 +1,6 @@
 package aaj928.cs371m.xkcdbrowser.ui
 
+import aaj928.cs371m.xkcdbrowser.MainActivity
 import aaj928.cs371m.xkcdbrowser.R
 import aaj928.cs371m.xkcdbrowser.api.Comic
 import androidx.fragment.app.Fragment
@@ -12,6 +13,7 @@ import android.widget.TextView
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import aaj928.cs371m.xkcdbrowser.glide.Glide
+import androidx.appcompat.widget.AppCompatImageView
 
 class ComicFragment : Fragment() {
 
@@ -25,20 +27,30 @@ class ComicFragment : Fragment() {
         //TODO set all the things
 
         val titleTextView = view.findViewById<TextView>(R.id.titleTextView)
-        var theImageView = view.findViewById<ImageView>(R.id.image)
-        /*val ratingTextView = view.findViewById<TextView>(R.id.ratingTextView)
-        val posterImageView = view.findViewById<ImageView>(R.id.posterImageView)
-        val overviewTextView = view.findViewById<TextView>(R.id.overviewTextView)
-        */
-        // Retrieve and display the movie data from the Bundle
+        val theImageView = view.findViewById<ImageView>(R.id.image)
+        val numView = view.findViewById<TextView>(R.id.comic_num)
+
         val args = arguments
         titleTextView.text = args?.getString("safe_title")
         val imageUrl = args?.getString("img")
         Glide.glideFetch(imageUrl!!, imageUrl!!, theImageView)
 
+        theImageView.setOnLongClickListener {
+            it -> true
+            //TODO display alt text
+        }
+
+        numView.text = args?.getString("num")
+
+
+
 
 
         return view
+    }
+
+    fun onCreate(){
+
     }
 
     companion object {
