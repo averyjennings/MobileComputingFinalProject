@@ -14,6 +14,8 @@ import androidx.core.content.ContextCompat.startActivity
 import androidx.lifecycle.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import java.util.*
+import kotlin.collections.ArrayList
 
 class ComicViewModel : ViewModel() {
 
@@ -22,7 +24,72 @@ class ComicViewModel : ViewModel() {
     private val api = XKCDApi.create()
     private val repository = ComicPostRepository(api)
 
-    private val comics = MutableLiveData<ArrayList<Comic>>()
+    private val comics = MutableLiveData<LinkedList<Comic>>()
+
+    private val nextComic = MutableLiveData<Comic>() //This is the most recently fetched comic that needs to be added to the pageradapter
+    private val prevComic = MutableLiveData<Comic>()
+
+
+    fun observeNextComic() : LiveData<Comic>{
+        return nextComic
+    }
+
+    fun observePrevComic() : LiveData<Comic>{
+        return prevComic
+    }
+
+    fun jumpToComic(index : Int) = viewModelScope.launch(
+        context = viewModelScope.coroutineContext
+                + Dispatchers.IO) {
+        comics.postValue(repository.jumpToComic(index))
+    }
+
+    //updates the prevComic
+    fun updatePrev() = viewModelScope.launch(
+        context = viewModelScope.coroutineContext
+                + Dispatchers.IO) {
+        if(comics.value != null){
+            prevComic.postValue(comics.value!!.first)
+        }
+    }
+
+    fun updateNext() = viewModelScope.launch(
+        context = viewModelScope.coroutineContext
+                + Dispatchers.IO) {
+        if(comics.value != null) {
+            nextComic.postValue(comics.value!!.last)
+        }
+    }
+
+    fun getPrev() = viewModelScope.launch(
+        context = viewModelScope.coroutineContext
+                + Dispatchers.IO) {
+        if(comics.value != null) {
+            if (comics.value!!.first.num!! == 0) {
+                return@launch
+            }
+        }else{
+            return@launch
+        }
+
+        var tempList = LinkedList(listOf<Comic>())
+        tempList.addAll(comics.value ?: LinkedList(listOf<Comic>()))
+        comics.postValue(repository.getPrevComic(tempList, tempList.peekFirst().num!!-1))
+        //prevComic.postValue(comics.value!!.peekFirst())
+    }
+
+    fun getNext() = viewModelScope.launch(
+        context = viewModelScope.coroutineContext
+                + Dispatchers.IO) {
+        if(comics.value == null){
+            return@launch
+        }
+
+        var tempList = LinkedList(listOf<Comic>())
+        tempList.addAll(comics.value ?: LinkedList(listOf<Comic>()))
+        comics.postValue(repository.getNextComics(tempList, tempList.peekLast().num!!+1, 0))
+        //nextComic.postValue(comics.value!!.peekLast())
+    }
 
 
     fun netRefresh() = viewModelScope.launch(
@@ -36,20 +103,14 @@ class ComicViewModel : ViewModel() {
                 + Dispatchers.IO) {
 
         //TODO some logic to append the next comics onto the list (make sure it doesn't go past the last comic)
-        var tempList = arrayListOf<Comic>()
-        tempList.addAll(comics.value ?: arrayListOf<Comic>())
+        var tempList = LinkedList(listOf<Comic>())
+        tempList.addAll(comics.value ?: LinkedList(listOf<Comic>()))
         comics.postValue(repository.getNextComics(tempList, init, len))
 
-
-    }
-    fun getFirstComics() = viewModelScope.launch(
-        context = viewModelScope.coroutineContext
-                + Dispatchers.IO) {
-        comics.postValue(repository.getFirstComics())
     }
 
 
-    fun observeComics() : LiveData<ArrayList<Comic>> {
+    fun observeComics() : LiveData<LinkedList<Comic>> {
         return comics
     }
 
