@@ -20,6 +20,8 @@ import kotlin.collections.ArrayList
 class ComicViewModel : ViewModel() {
 
 
+    private val favorites = HashMap<Int, Comic>() //key: num, val: Comic
+    private var favoritesLiveData = MutableLiveData<HashMap<Int, Comic>>()
 
     private val api = XKCDApi.create()
     private val repository = ComicPostRepository(api)
@@ -28,6 +30,37 @@ class ComicViewModel : ViewModel() {
 
     private val nextComic = MutableLiveData<Comic>() //This is the most recently fetched comic that needs to be added to the pageradapter
     private val prevComic = MutableLiveData<Comic>()
+
+    fun isSanitary(n: Int) : Boolean{
+        //TODO CHECK UPPPER BOUND
+        if(n < 1 || n == 404){
+            return false
+        }
+
+        return true
+    }
+
+    fun addFavorite(key : Int, comic : Comic){
+        if(!favorites.containsKey(key)) {
+            favorites.put(key, comic)
+            favoritesLiveData.postValue(favorites)
+        }
+    }
+
+    fun removeFavorite(){
+        fun removeFavorite(key : Int){
+            favorites.remove(key)
+            favoritesLiveData.postValue(favorites)
+        }
+    }
+
+    fun isFavorited(key : Int) : Boolean{
+        return favorites.contains(key)
+    }
+
+    fun getFavoritesAsList() : List<Comic> {
+        return favorites.values.toList()
+    }
 
 
     fun observeNextComic() : LiveData<Comic>{
@@ -41,7 +74,14 @@ class ComicViewModel : ViewModel() {
     fun jumpToComic(index : Int) = viewModelScope.launch(
         context = viewModelScope.coroutineContext
                 + Dispatchers.IO) {
+        if(!isSanitary(index)){
+            return@launch
+        }
         comics.postValue(repository.jumpToComic(index))
+        getPrev()
+        getNext()
+        updatePrev()
+        updateNext()
     }
 
     //updates the prevComic
@@ -65,7 +105,7 @@ class ComicViewModel : ViewModel() {
         context = viewModelScope.coroutineContext
                 + Dispatchers.IO) {
         if(comics.value != null) {
-            if (comics.value!!.first.num!! == 0) {
+            if (comics.value!!.first.num!! == 1) {
                 return@launch
             }
         }else{
@@ -74,7 +114,7 @@ class ComicViewModel : ViewModel() {
 
         var tempList = LinkedList(listOf<Comic>())
         tempList.addAll(comics.value ?: LinkedList(listOf<Comic>()))
-        comics.postValue(repository.getPrevComic(tempList, tempList.peekFirst().num!!-1))
+        comics.postValue(repository.getPrevComic(tempList, tempList.peekFirst().num!!-1) ?: tempList)
         //prevComic.postValue(comics.value!!.peekFirst())
     }
 
@@ -87,7 +127,7 @@ class ComicViewModel : ViewModel() {
 
         var tempList = LinkedList(listOf<Comic>())
         tempList.addAll(comics.value ?: LinkedList(listOf<Comic>()))
-        comics.postValue(repository.getNextComics(tempList, tempList.peekLast().num!!+1, 0))
+        comics.postValue(repository.getNextComic(tempList, tempList.peekLast().num!!+1) ?: tempList)
         //nextComic.postValue(comics.value!!.peekLast())
     }
 

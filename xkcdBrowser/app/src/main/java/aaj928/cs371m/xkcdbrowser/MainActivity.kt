@@ -24,6 +24,7 @@ import android.view.inputmethod.InputMethodManager.HIDE_NOT_ALWAYS
 import android.content.Context.INPUT_METHOD_SERVICE
 import android.util.Log
 import android.view.KeyEvent
+import android.view.KeyEvent.ACTION_DOWN
 import androidx.core.content.ContextCompat.getSystemService
 import android.view.KeyEvent.KEYCODE_ENTER
 import android.view.inputmethod.InputMethodManager
@@ -31,6 +32,7 @@ import android.widget.TextView
 import android.widget.TextView.OnEditorActionListener
 import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
+import android.widget.ImageView
 import androidx.appcompat.widget.AppCompatImageView
 import androidx.core.app.ComponentActivity.ExtraData
 import androidx.core.content.ContextCompat.getSystemService
@@ -39,6 +41,7 @@ import androidx.core.widget.doAfterTextChanged
 import androidx.fragment.app.FragmentTransaction
 import kotlinx.android.synthetic.main.fragment_comic.*
 import okhttp3.internal.notify
+import java.lang.Double.parseDouble
 
 
 class MainActivity : AppCompatActivity() {
@@ -84,10 +87,11 @@ class MainActivity : AppCompatActivity() {
                 event: KeyEvent?
             ): Boolean {
 
-                if(actionId == EditorInfo.IME_ACTION_DONE) {
+                if(actionId == EditorInfo.IME_ACTION_DONE || event?.getAction() == ACTION_DOWN
+                    || event?.getAction() == KEYCODE_ENTER) {
                     val s = v.text.toString()
-                    jumpToComic(s.toInt())
-
+                    jumpToComic(s)
+                    return true
                 }
 
                 editText.isCursorVisible = false
@@ -96,19 +100,23 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-       /* editText.doAfterTextChanged{
-            val s = it.toString()
-            if(s != "") {
-                val num: Int = s.toInt()
-                if (num > 1 && num != 404) {
-                    //viewModel.jumpToComic(s.toInt())
-                    jumpToComic(s.toInt())
-                }
-            }
-
-        }*/
-
         actionBar.customView = customView
+
+
+        favorites = FavoritesFragment()//.newInstance()
+        var heart = actionBar.customView.findViewById<ImageView>(R.id.actionFavorite)
+        heart.setOnClickListener{
+            supportFragmentManager
+                .beginTransaction()
+                // No back stack for home
+                .replace(R.id.main_frame, favorites)
+                // TRANSIT_FRAGMENT_FADE calls for the Fragment to fade away
+                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
+                .addToBackStack(null)
+                .commit()
+        }
+
+
     }
 
     fun hideKeyboard() {
@@ -122,8 +130,22 @@ class MainActivity : AppCompatActivity() {
         imm.hideSoftInputFromWindow(view.windowToken, 0);
     }
 
-    fun jumpToComic(num : Int){
-        viewModel.jumpToComic(num)
+    fun isSanitary(s: String) : Boolean{
+        val n : Int = s.toIntOrNull() ?: return false
+
+        //TODO CHECK UPPPER BOUND
+        if(n > 0  && n != 404){
+            return true
+        }
+
+        return false
+    }
+
+    fun jumpToComic(num : String){
+        if(!isSanitary(num)){
+            return
+        }
+        viewModel.jumpToComic(num.toInt())
         if(viewPager != null){
             viewPager.adapter = null
         }
@@ -141,25 +163,8 @@ class MainActivity : AppCompatActivity() {
 
         initActionBar(supportActionBar!!)
 
-        /*TODO
-        favorites = FavoritesFragment().newInstance()
-        var heart = supportActionBar!!.customView.findViewById<AppCompatImageView>(R.id.actionFavorite)
-        heart.setOnClickListener{
-            supportFragmentManager
-                .beginTransaction()
-                // No back stack for home
-                .replace(R.id.main_frame, favorites)
-                // TRANSIT_FRAGMENT_FADE calls for the Fragment to fade away
-                .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
-                .addToBackStack(null)
-                .commit()
-        }*/
-
         viewModel = ViewModelProviders.of(this)[ComicViewModel::class.java]
         viewPager = findViewById(R.id.viewPager)
-
-        jumpToComic(20)
-
 
         viewModel.observeComics().observe(this, Observer {
             if(viewPager.adapter == null){
@@ -169,7 +174,6 @@ class MainActivity : AppCompatActivity() {
                 }
                 viewPager.adapter = pagerAdapter
 
-                //viewPager.setCurrentItem(2)
             }
 
 
@@ -178,6 +182,9 @@ class MainActivity : AppCompatActivity() {
 
         })
 
+
+
+
         viewModel.observeNextComic().observe(this, Observer {
             (viewPager.adapter as ComicPagerAdapter).addComic(it)
             (viewPager.adapter as ComicPagerAdapter).notifyDataSetChanged()
@@ -185,17 +192,11 @@ class MainActivity : AppCompatActivity() {
         })
 
         viewModel.observePrevComic().observe(this, Observer {
-            (viewPager.adapter as ComicPagerAdapter).addFirstComic(it)
-            viewPager.setCurrentItem(1)
-            (viewPager.adapter as ComicPagerAdapter).notifyDataSetChanged()
-            //viewPager.setCurrentItem(2)
-            //viewPager.setCurrentItem(1)
-
+            if((viewPager.adapter as ComicPagerAdapter).addFirstComic(it)) {
+                viewPager.setCurrentItem(1)
+                (viewPager.adapter as ComicPagerAdapter).notifyDataSetChanged()
+            }
         })
-
-        //viewModel.getNext()
-        //viewModel.getPrev()
-
 
         viewPager.addOnPageChangeListener(object : ViewPager.OnPageChangeListener {
             override fun onPageScrollStateChanged(state: Int) {
@@ -231,6 +232,9 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+
+
+        jumpToComic("20")
 
 
 

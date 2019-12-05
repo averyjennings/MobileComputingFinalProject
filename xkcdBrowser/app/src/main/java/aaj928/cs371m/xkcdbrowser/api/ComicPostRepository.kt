@@ -8,9 +8,9 @@ class ComicPostRepository(private val api: XKCDApi) {
     //makes an entirely new list with only one comic in it now.
     suspend fun jumpToComic(index : Int) : LinkedList<Comic> {
         var list = LinkedList(listOf<Comic>())
-        list.add(api.fetchComic((index-1).toString()))
+        //list.add(api.fetchComic((index-1).toString()))
         list.add(api.fetchComic((index).toString()))
-        list.add(api.fetchComic((index+1).toString()))
+        //list.add(api.fetchComic((index+1).toString()))
 
         return list
     }
@@ -19,20 +19,34 @@ class ComicPostRepository(private val api: XKCDApi) {
         if(comicNum == 0){
             return null
         }
-        var comic = getComic((comicNum).toString())
+        var comic : Comic
+        if(comicNum == 404){
+            comic = getComic((comicNum-1).toString())
+        }
+        else{
+            comic = getComic((comicNum).toString())
+        }
         if(!tempList.contains(comic)) {
             tempList.addFirst(comic)
         }
         return tempList
     }
-    suspend fun getNextComic(index : Int) : Comic? {
-        var temp = getComic("")
-        if(index >= temp.num!!){
+    suspend fun getNextComic(tempList : LinkedList<Comic>, comicNum : Int) : LinkedList<Comic>? {
+        if(comicNum == 0){
             return null
         }
-        return getComic((index+1).toString())
+        var comic : Comic
+        if(comicNum == 404){
+            comic = getComic((comicNum+1).toString())
+        }
+        else{
+            comic = getComic((comicNum).toString())
+        }
+        if(!tempList.contains(comic)) {
+            tempList.add(comic)
+        }
+        return tempList
     }
-
     //fetch comcics from initial index to initial+length
     suspend fun getNextComics(tempList : LinkedList<Comic>, init: Int, len : Int): LinkedList<Comic>? {
         if(len == 0){//one item

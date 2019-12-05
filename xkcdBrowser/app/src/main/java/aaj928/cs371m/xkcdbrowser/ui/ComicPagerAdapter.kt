@@ -86,7 +86,7 @@ class ComicPagerAdapter(fragmentManager: FragmentManager,  viewModel : ComicView
 
     }
 
-    fun addFirstComic(c : Comic){
+    fun addFirstComic(c : Comic) : Boolean{
         if(!numSet.contains(c.num)){
             var frag = ComicFragment.newInstance(c)
             if(!comics.contains(frag)){
@@ -97,7 +97,9 @@ class ComicPagerAdapter(fragmentManager: FragmentManager,  viewModel : ComicView
 
             }
             numSet.add(c.num!!)
+            return true
         }
+        return false
     }
 
     override fun getCount(): Int {
