@@ -17,7 +17,9 @@ class ComicPagerAdapter(fragmentManager: FragmentManager,  viewModel : ComicView
     FragmentStatePagerAdapter(fragmentManager, BEHAVIOR_RESUME_ONLY_CURRENT_FRAGMENT) {
 
     private var viewModel = viewModel
-    private var comics: LinkedList<ComicFragment> = LinkedList(listOf<ComicFragment>())
+    //private var comics: LinkedList<ComicFragment> = LinkedList(listOf<ComicFragment>())
+    private var comics: LinkedList<Comic> = LinkedList(listOf<Comic>())
+
     private var positionOffset = 0
     private var size = 0
     //private var fragments : LinkedList<ComicFragment> =
@@ -49,12 +51,27 @@ class ComicPagerAdapter(fragmentManager: FragmentManager,  viewModel : ComicView
 
         //return ComicFragment.newInstance(comics[position])
         */
+        //return comics[position]
+        return ComicFragment.newInstance(comics[position])
+
+    }
+
+    public fun getComic(position : Int) : Comic{
         return comics[position]
     }
 
-    /*public fun getComic(position : Int) : Comic{
-        return comics[position]
-    }*/
+    public fun positionOf(num : Int) : Int {
+        var i = 0
+        for(comic in comics){
+            if(comic.num == num){
+                return i
+            }
+            else{
+                i++
+            }
+        }
+        return -1
+    }
 
 
 
@@ -75,9 +92,9 @@ class ComicPagerAdapter(fragmentManager: FragmentManager,  viewModel : ComicView
             notifyDataSetChanged()
         }*/
         if(!numSet.contains(c.num)){
-            var frag = ComicFragment.newInstance(c)
-            if(!comics.contains(frag)){
-                comics.add(frag)
+            //var frag = ComicFragment.newInstance(c)
+            if(!comics.contains(c/*frag*/)){
+                comics.add(c/*frag*/)
                 size++
                 notifyDataSetChanged()
             }
@@ -88,9 +105,9 @@ class ComicPagerAdapter(fragmentManager: FragmentManager,  viewModel : ComicView
 
     fun addFirstComic(c : Comic) : Boolean{
         if(!numSet.contains(c.num)){
-            var frag = ComicFragment.newInstance(c)
-            if(!comics.contains(frag)){
-                comics.addFirst(frag)
+            //var frag = ComicFragment.newInstance(c)
+            if(!comics.contains(c/*frag*/)){
+                comics.addFirst(c/*frag*/)
                 size++
                 notifyDataSetChanged()
                 //positionOffset++

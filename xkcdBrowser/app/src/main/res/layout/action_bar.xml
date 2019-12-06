@@ -7,9 +7,11 @@
     <ImageView
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:id="@+id/hamburger"
+        android:id="@+id/newBut"
         android:layout_margin="12dp"
-        android:src="@drawable/ic_dehaze_black_24dp"
+        android:scaleX="2"
+        android:scaleY="2"
+        android:src="@drawable/ic_fiber_new_black_24dp"
         />
 
     <EditText
@@ -30,6 +32,8 @@
         android:layout_height="match_parent"
         android:id="@+id/actionFavorite"
         android:src="@drawable/ic_favorite_black_24dp"
+        android:scaleX="1.5"
+        android:scaleY="1.5"
         android:layout_margin="12dp"
 
         />

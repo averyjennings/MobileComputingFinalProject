@@ -2,6 +2,7 @@ package aaj928.cs371m.xkcdbrowser.ui
 
 import aaj928.cs371m.xkcdbrowser.MainActivity
 import aaj928.cs371m.xkcdbrowser.R
+import aaj928.cs371m.xkcdbrowser.api.Comic
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -16,10 +17,15 @@ import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager.widget.ViewPager
+import kotlinx.android.synthetic.main.activity_main.*
 
 
 class FavoritesFragment: Fragment() {
     private lateinit var viewModel: ComicViewModel
+    private lateinit var viewPager: ViewPager
+    private lateinit var pagerAdapter : ComicPagerAdapter
+
     private lateinit var adapter : ComicPagerAdapter
     private var rv: RecyclerView? = null
 
@@ -63,6 +69,26 @@ class FavoritesFragment: Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
+        val root =  inflater.inflate(R.layout.activity_main, container, false)
+
+        viewModel = ViewModelProviders.of(this)[ComicViewModel::class.java]
+        viewPager = root.findViewById(R.id.viewPager)
+
+        /*viewModel.observeComics().observe(this, Observer {
+            if(viewPager.adapter == null){
+                pagerAdapter = ComicPagerAdapter(fragmentManager!!/*, it*/, viewModel)
+                for(c : Comic in it){
+                    pagerAdapter.addComic(c)
+                }
+                viewPager.adapter = pagerAdapter
+
+                if(it.first == it.last){
+                    viewModel.getPrev()
+                    viewModel.getNext()
+                }
+            }
+        })*/
+
         /*val root =  inflater.inflate(R.layout.fragment_home, container, false)
 
         var action = (activity as MainActivity).supportActionBar!!.customView.findViewById<TextView>(R.id.actionTitle)
@@ -74,7 +100,7 @@ class FavoritesFragment: Fragment() {
         adapter.submitList(viewModel.observeFavoritesAsPosts())
         //titleSearch()
         return root*/
-        return null
+        return root
     }
 
 

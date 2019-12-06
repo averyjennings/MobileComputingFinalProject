@@ -52,6 +52,9 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var favorites : FavoritesFragment
 
+    private var savedComicNum = 0
+    private var inFavorites = false
+
     /*private fun titleSearch() {
         var search = supportActionBar!!.customView.findViewById<EditText>(R.id.actionSearch)
         search.addTextChangedListener{
@@ -102,20 +105,44 @@ class MainActivity : AppCompatActivity() {
 
         actionBar.customView = customView
 
-
         favorites = FavoritesFragment()//.newInstance()
         var heart = actionBar.customView.findViewById<ImageView>(R.id.actionFavorite)
         heart.setOnClickListener{
-            supportFragmentManager
+            /*supportFragmentManager
                 .beginTransaction()
                 // No back stack for home
                 .replace(R.id.main_frame, favorites)
                 // TRANSIT_FRAGMENT_FADE calls for the Fragment to fade away
                 .setTransition(FragmentTransaction.TRANSIT_FRAGMENT_FADE)
                 .addToBackStack(null)
-                .commit()
-        }
+                .commit()*/
+            if(!inFavorites){
+                inFavorites=true
+                savedComicNum=(viewPager.adapter as ComicPagerAdapter).getComic(viewPager.currentItem).num!!
+                pagerAdapter = ComicPagerAdapter(supportFragmentManager/*, it*/, viewModel)
+                for(c : Comic in viewModel.getFavoritesAsList()){
+                    pagerAdapter.addComic(c)
+                }
+                viewPager.adapter = pagerAdapter
 
+            }else{
+                inFavorites=false
+                jumpToComic(savedComicNum.toString())
+            }
+        }
+        var newBut = actionBar.customView.findViewById<ImageView>(R.id.newBut)
+        newBut.setOnClickListener{
+            if(!inFavorites) {
+                if (viewPager != null) {
+                    viewPager.adapter = null
+                }
+                //viewModel.refreshLastComic().invokeOnCompletion {}
+                viewModel.jumpToNewest().invokeOnCompletion {
+                    viewModel.getPrev()
+                    viewModel.updatePrev()
+                }
+            }
+        }
 
     }
 
@@ -145,12 +172,26 @@ class MainActivity : AppCompatActivity() {
         if(!isSanitary(num)){
             return
         }
-        viewModel.jumpToComic(num.toInt())
-        if(viewPager != null){
-            viewPager.adapter = null
+        if(!inFavorites) {
+            if (viewPager != null) {
+                viewPager.adapter = null
+            }
+            viewModel.jumpToComic(num.toInt()).invokeOnCompletion {
+                viewModel.getPrev()
+                viewModel.getNext()
+            }
+        }else{
+            if(viewModel.isFavorited(num.toInt())){
+                val pos = (viewPager.adapter as ComicPagerAdapter).positionOf(num.toInt())
+                if(pos == -1){
+                    return
+                }else{
+                    viewPager.setCurrentItem(pos)
+                }
+            }
         }
-    }
 
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -167,34 +208,68 @@ class MainActivity : AppCompatActivity() {
         viewPager = findViewById(R.id.viewPager)
 
         viewModel.observeComics().observe(this, Observer {
-            if(viewPager.adapter == null){
-                pagerAdapter = ComicPagerAdapter(supportFragmentManager/*, it*/, viewModel)
-                for(c : Comic in it){
-                    pagerAdapter.addComic(c)
-                }
-                viewPager.adapter = pagerAdapter
+            if(!inFavorites) {
+                if (viewPager.adapter == null) {
+                    pagerAdapter = ComicPagerAdapter(supportFragmentManager/*, it*/, viewModel)
+                    for (c: Comic in it) {
+                        pagerAdapter.addComic(c)
+                    }
+                    viewPager.adapter = pagerAdapter
 
+                    if (it.first == it.last) {
+                        viewModel.getPrev()
+                        viewModel.getNext()
+                    }
+
+
+                }
+
+                //viewModel.getNext()
+                //viewModel.getPrev()
+                /*if(viewPager.currentItem==0){
+                viewModel.getPrev()
+            }else{
+
+            }*/
+
+                /*if(viewPager.currentItem==0){
+                viewModel.getPrev()
+                viewModel.updatePrev()
+            }else if(viewPager.currentItem == (viewPager.adapter as ComicPagerAdapter).getCount()-1) {
+                viewModel.updateNext()
+            }*/
+
+                viewModel.updatePrev()
+                viewModel.updateNext()
             }
 
-
-            viewModel.updateNext()
-            viewModel.updatePrev()
-
         })
 
 
-
+        //TODO FIX THESE BUGS!!!
 
         viewModel.observeNextComic().observe(this, Observer {
-            (viewPager.adapter as ComicPagerAdapter).addComic(it)
-            (viewPager.adapter as ComicPagerAdapter).notifyDataSetChanged()
-
+            if(it != null) {
+                if (viewPager.currentItem == ((viewPager.adapter as ComicPagerAdapter).getCount() - 1) && it.num!! < (viewModel.getLast().num!!)) { //if this is true then we need to get again
+                    viewModel.updateNext()
+                }//else {
+                (viewPager.adapter as ComicPagerAdapter).addComic(it)
+                (viewPager.adapter as ComicPagerAdapter).notifyDataSetChanged()
+                //}
+            }
         })
 
+
         viewModel.observePrevComic().observe(this, Observer {
-            if((viewPager.adapter as ComicPagerAdapter).addFirstComic(it)) {
-                viewPager.setCurrentItem(1)
-                (viewPager.adapter as ComicPagerAdapter).notifyDataSetChanged()
+            if(it != null) {
+                if (viewPager.currentItem == 0 && it.num!! > (viewModel.getFirst().num!!)) {
+                    viewModel.updatePrev()
+                }//else {
+                if ((viewPager.adapter as ComicPagerAdapter).addFirstComic(it)) {
+                    viewPager.setCurrentItem(1)
+                    (viewPager.adapter as ComicPagerAdapter).notifyDataSetChanged()
+                }
+                //}
             }
         })
 
@@ -218,13 +293,17 @@ class MainActivity : AppCompatActivity() {
                     //viewModel.getNextComics(comics[position].num!!,1)
 
                     //viewModel.getNextComics(pagerAdapter.getComic(position).num!!,1)
-                    viewModel.getNext()
+                    if(!inFavorites){
+                        viewModel.getNext()
+                    }
 
                 }
                 if(position==0){
                     //TODO
                     //viewModel.getPrevComic(comics[0].num!!)
-                    viewModel.getPrev()
+                    if(!inFavorites){
+                        viewModel.getPrev()
+                    }
                     //viewPager.setCurrentItem(1)
                     //viewModel.getPrev()
                     //viewPager.setCurrentItem(1)
@@ -233,9 +312,8 @@ class MainActivity : AppCompatActivity() {
             }
         })
 
-
-        jumpToComic("20")
-
+        viewModel.refreshLastComic()
+        jumpToComic("500")
 
 
     }

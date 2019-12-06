@@ -31,27 +31,52 @@ class ComicViewModel : ViewModel() {
     private val nextComic = MutableLiveData<Comic>() //This is the most recently fetched comic that needs to be added to the pageradapter
     private val prevComic = MutableLiveData<Comic>()
 
+    private var lastComic = MutableLiveData<Comic>()
+
+
+
     fun isSanitary(n: Int) : Boolean{
-        //TODO CHECK UPPPER BOUND
+        if(lastComic.value == null){
+            refreshLastComic()
+        }
         if(n < 1 || n == 404){
+            return false
+        }
+        if(lastComic.value != null && n > lastComic.value?.num!!)
+        {
             return false
         }
 
         return true
     }
 
-    fun addFavorite(key : Int, comic : Comic){
+    fun refreshLastComic() = viewModelScope.launch(
+        context = viewModelScope.coroutineContext
+                + Dispatchers.IO) {
+
+        lastComic.postValue(repository.getComic(""))
+    }
+
+    fun getFirst() : Comic{
+        return comics.value!!.first
+    }
+
+    fun getLast() : Comic{
+        return comics.value!!.last
+    }
+
+    fun addFavorite(key : Int) = viewModelScope.launch(
+        context = viewModelScope.coroutineContext
+                + Dispatchers.IO) {
         if(!favorites.containsKey(key)) {
-            favorites.put(key, comic)
+            favorites.put(key, repository.getComic(key.toString()))
             favoritesLiveData.postValue(favorites)
         }
     }
 
-    fun removeFavorite(){
-        fun removeFavorite(key : Int){
-            favorites.remove(key)
-            favoritesLiveData.postValue(favorites)
-        }
+    fun removeFavorite(key : Int){
+        favorites.remove(key)
+        favoritesLiveData.postValue(favorites)
     }
 
     fun isFavorited(key : Int) : Boolean{
@@ -71,23 +96,43 @@ class ComicViewModel : ViewModel() {
         return prevComic
     }
 
+    fun jumpToNewest() = viewModelScope.launch(
+        context = viewModelScope.coroutineContext
+                + Dispatchers.IO) {
+
+        refreshLastComic().join()
+
+        //var list = LinkedList(listOf<Comic>())
+        //list.add(lastComic.value)
+        comics.postValue(repository.jumpToComic(0, true))
+
+        //nextComic.postValue(null)
+        //getPrev().join()
+    }
+
     fun jumpToComic(index : Int) = viewModelScope.launch(
         context = viewModelScope.coroutineContext
                 + Dispatchers.IO) {
         if(!isSanitary(index)){
             return@launch
         }
-        comics.postValue(repository.jumpToComic(index))
-        getPrev()
-        getNext()
-        updatePrev()
-        updateNext()
+        comics.postValue(repository.jumpToComic(index, false) ?: comics.value)
+        //TODO
+        //prevComic.postValue(null)
+        //nextComic.postValue(null)
+        //getPrev().invokeOnCompletion { /*updatePrev()*/ }
+        //getNext().invokeOnCompletion { /*updateNext()*/ }
+        getPrev().join()
+        getNext().join()
     }
 
     //updates the prevComic
     fun updatePrev() = viewModelScope.launch(
         context = viewModelScope.coroutineContext
                 + Dispatchers.IO) {
+        /*if(prevComic.value?.num == comics.value?.first?.num){
+            return@launch
+        }*/
         if(comics.value != null){
             prevComic.postValue(comics.value!!.first)
         }
@@ -96,6 +141,9 @@ class ComicViewModel : ViewModel() {
     fun updateNext() = viewModelScope.launch(
         context = viewModelScope.coroutineContext
                 + Dispatchers.IO) {
+        /*if(nextComic.value?.num == comics.value?.last?.num){
+            return@launch
+        }*/
         if(comics.value != null) {
             nextComic.postValue(comics.value!!.last)
         }
@@ -105,10 +153,14 @@ class ComicViewModel : ViewModel() {
         context = viewModelScope.coroutineContext
                 + Dispatchers.IO) {
         if(comics.value != null) {
-            if (comics.value!!.first.num!! == 1) {
+            if (comics.value!!.first.num!! <= 1) {
                 return@launch
             }
         }else{
+            return@launch
+        }
+        if(prevComic?.value?.num != comics.value?.first?.num){
+            println("inside getPrev but shouldn't have called getPrev")
             return@launch
         }
 
@@ -127,6 +179,13 @@ class ComicViewModel : ViewModel() {
 
         var tempList = LinkedList(listOf<Comic>())
         tempList.addAll(comics.value ?: LinkedList(listOf<Comic>()))
+
+        if(tempList.size > 0){
+            if(tempList.peekLast().num == lastComic.value?.num){
+                return@launch
+            }
+        }
+
         comics.postValue(repository.getNextComic(tempList, tempList.peekLast().num!!+1) ?: tempList)
         //nextComic.postValue(comics.value!!.peekLast())
     }

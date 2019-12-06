@@ -17,6 +17,9 @@ import androidx.appcompat.widget.AppCompatImageView
 
 class ComicFragment : Fragment() {
 
+    private lateinit var viewModel : ComicViewModel
+  //  private lateinit var num : Int
+
 
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState:
@@ -26,6 +29,7 @@ class ComicFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_comic, container, false)
         //TODO set all the things
 
+        val heart = view.findViewById<ImageView>(R.id.fav)
         val titleTextView = view.findViewById<TextView>(R.id.titleTextView)
         val theImageView = view.findViewById<ImageView>(R.id.image)
         val numView = view.findViewById<TextView>(R.id.comic_num)
@@ -35,13 +39,45 @@ class ComicFragment : Fragment() {
         val imageUrl = args?.getString("img")
         Glide.glideFetch(imageUrl!!, imageUrl!!, theImageView)
 
+/*        theImageView.setOnTouchListener{
+            v, event ->
+            var x
+
+            true
+        }*/
+
+     //  num = args?.getString("num").toInt()
+        val num = args?.getString("num").toInt()
+        numView.text = args?.getString("num")
+
+
+
+        if(viewModel.isFavorited(num)){
+            heart.setImageResource(R.drawable.ic_favorite_black_24dp)
+        }else{
+            heart.setImageResource(R.drawable.ic_favorite_border_black_24dp)
+        }
+
+
+
+        heart.setOnClickListener{
+            if(viewModel.isFavorited(num)){
+                viewModel.removeFavorite(num)
+                heart.setImageResource(R.drawable.ic_favorite_border_black_24dp)
+                /*if(unfavoriteIsRemove) {
+                    submitList(viewModel.observeFavoritesAsPosts())
+                    notifyDataSetChanged()
+                }*/
+            }else{
+                viewModel.addFavorite(num)
+                heart.setImageResource(R.drawable.ic_favorite_black_24dp)
+            }
+        }
+
         theImageView.setOnLongClickListener {
             it -> true
             //TODO display alt text
         }
-
-        numView.text = args?.getString("num")
-
 
 
 
@@ -49,7 +85,9 @@ class ComicFragment : Fragment() {
         return view
     }
 
-    fun onCreate(){
+    override fun onCreate(savedInstanceState: Bundle?){
+        super.onCreate(savedInstanceState)
+        viewModel = ViewModelProviders.of(this.activity!!)[ComicViewModel::class.java]
 
     }
 
