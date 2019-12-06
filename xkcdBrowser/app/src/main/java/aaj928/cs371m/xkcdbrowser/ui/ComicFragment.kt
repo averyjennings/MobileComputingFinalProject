@@ -13,7 +13,13 @@ import android.widget.TextView
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProviders
 import aaj928.cs371m.xkcdbrowser.glide.Glide
+import android.app.Activity
 import androidx.appcompat.widget.AppCompatImageView
+import android.content.DialogInterface
+import android.widget.EditText
+import android.content.Context
+import androidx.appcompat.app.AlertDialog
+
 
 class ComicFragment : Fragment() {
 
@@ -77,6 +83,8 @@ class ComicFragment : Fragment() {
         theImageView.setOnLongClickListener {
             it -> true
             //TODO display alt text
+            showAddItemDialog(this.activity!!, args?.getString("alt"))
+            true
         }
 
 
@@ -90,6 +98,16 @@ class ComicFragment : Fragment() {
         viewModel = ViewModelProviders.of(this.activity!!)[ComicViewModel::class.java]
 
     }
+
+    private fun showAddItemDialog(c: Context, s : String) {
+        val taskTextView = TextView(c)
+        val dialog = AlertDialog.Builder(c)
+            .setMessage(s)
+            .setView(taskTextView)
+            .create()
+        dialog.show()
+    }
+
 
     companion object {
 

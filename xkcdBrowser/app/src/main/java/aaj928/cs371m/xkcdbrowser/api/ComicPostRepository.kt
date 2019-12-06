@@ -15,14 +15,28 @@ class ComicPostRepository(private val api: XKCDApi) {
         }
 
         var list = LinkedList(listOf<Comic>())
-        //list.add(api.fetchComic((index-1).toString()))
         if(newest){
+            list.add(api.fetchComic((lastComic!!.num!!-1).toString()))
             list.add(api.fetchCurrentComic())
         }
         else {
+            if(index > 1) {
+                if(index-1==404){
+                    list.add(api.fetchComic((index - 2).toString()))
+                }else{
+                    list.add(api.fetchComic((index - 1).toString()))
+                }
+            }
             list.add(api.fetchComic((index).toString()))
+            if(index < lastComic.num!!){
+                if(index+1==404){
+                    list.add(api.fetchComic((index+2).toString()))
+                }else{
+                    list.add(api.fetchComic((index+1).toString()))
+                }
+            }
+
         }
-        //list.add(api.fetchComic((index+1).toString()))
 
         return list
     }

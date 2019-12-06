@@ -55,6 +55,9 @@ class MainActivity : AppCompatActivity() {
     private var savedComicNum = 0
     private var inFavorites = false
 
+    private var newestFlag = false
+    private var jumpedFlag = false
+
     /*private fun titleSearch() {
         var search = supportActionBar!!.customView.findViewById<EditText>(R.id.actionSearch)
         search.addTextChangedListener{
@@ -127,21 +130,13 @@ class MainActivity : AppCompatActivity() {
 
             }else{
                 inFavorites=false
+                println("saved comic: "+savedComicNum.toString())
                 jumpToComic(savedComicNum.toString())
             }
         }
         var newBut = actionBar.customView.findViewById<ImageView>(R.id.newBut)
         newBut.setOnClickListener{
-            if(!inFavorites) {
-                if (viewPager != null) {
-                    viewPager.adapter = null
-                }
-                //viewModel.refreshLastComic().invokeOnCompletion {}
-                viewModel.jumpToNewest().invokeOnCompletion {
-                    viewModel.getPrev()
-                    viewModel.updatePrev()
-                }
-            }
+            jumpToNewest()
         }
 
     }
@@ -168,6 +163,22 @@ class MainActivity : AppCompatActivity() {
         return false
     }
 
+    fun jumpToNewest(){
+        if(!inFavorites) {
+            if (viewPager != null) {//
+                viewPager.adapter = null
+            }
+            newestFlag=true
+            //viewModel.refreshLastComic().invokeOnCompletion {}
+            viewModel.jumpToNewest().invokeOnCompletion {
+                //viewModel.getPrev()
+                //viewModel.updatePrev()
+            }
+            viewPager.setCurrentItem(1)
+
+        }
+    }
+
     fun jumpToComic(num : String){
         if(!isSanitary(num)){
             return
@@ -176,9 +187,10 @@ class MainActivity : AppCompatActivity() {
             if (viewPager != null) {
                 viewPager.adapter = null
             }
+            jumpedFlag=true
             viewModel.jumpToComic(num.toInt()).invokeOnCompletion {
-                viewModel.getPrev()
-                viewModel.getNext()
+                //viewModel.getPrev()
+                //viewModel.getNext()
             }
         }else{
             if(viewModel.isFavorited(num.toInt())){
@@ -221,6 +233,15 @@ class MainActivity : AppCompatActivity() {
                         viewModel.getNext()
                     }
 
+                    if(newestFlag){
+                        newestFlag = false
+                        viewPager.setCurrentItem(1)
+                    }
+
+                    if(it.isEmpty()){
+                        jumpToNewest()
+                    }
+
 
                 }
 
@@ -242,6 +263,15 @@ class MainActivity : AppCompatActivity() {
                 viewModel.updatePrev()
                 viewModel.updateNext()
             }
+            if(jumpedFlag){
+                jumpedFlag=false
+                if(pagerAdapter.getComic(0).num!! != 1) {
+                    viewPager.setCurrentItem(1)
+                }
+                //viewModel.getPrev()
+                //viewModel.getNext()
+            }
+
 
         })
 

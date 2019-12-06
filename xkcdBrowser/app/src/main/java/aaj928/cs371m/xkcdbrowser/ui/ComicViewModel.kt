@@ -122,8 +122,8 @@ class ComicViewModel : ViewModel() {
         //nextComic.postValue(null)
         //getPrev().invokeOnCompletion { /*updatePrev()*/ }
         //getNext().invokeOnCompletion { /*updateNext()*/ }
-        getPrev().join()
-        getNext().join()
+        //getPrev().join()
+        //getNext().join()
     }
 
     //updates the prevComic
