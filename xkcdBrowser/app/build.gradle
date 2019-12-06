@@ -64,4 +64,8 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     testImplementation "org.robolectric:robolectric:4.3"
     testImplementation 'androidx.test:core:1.2.0'
+
+    //for zooming images
+    implementation 'com.jsibbold:zoomage:1.3.0-SNAPSHOT'
+
 }

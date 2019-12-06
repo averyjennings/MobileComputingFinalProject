@@ -343,7 +343,8 @@ class MainActivity : AppCompatActivity() {
         })
 
         viewModel.refreshLastComic()
-        jumpToComic("500")
+        val rnds = (1..2000).random()
+        jumpToComic(rnds.toString())
 
 
     }

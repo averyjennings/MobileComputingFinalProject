@@ -100,10 +100,8 @@ class ComicFragment : Fragment() {
     }
 
     private fun showAddItemDialog(c: Context, s : String) {
-        val taskTextView = TextView(c)
         val dialog = AlertDialog.Builder(c)
             .setMessage(s)
-            .setView(taskTextView)
             .create()
         dialog.show()
     }
